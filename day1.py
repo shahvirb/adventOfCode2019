@@ -29,9 +29,10 @@ def calc_fuel_with_child_fuel(m):
 
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()
 
-    input = inputreader.readlines('day1.txt')
+    input = inputreader.readlines("day1.txt")
 
     # Part 1
     masses = [int(i) for i in input]
