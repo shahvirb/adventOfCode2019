@@ -39,7 +39,10 @@ class ExecState(State):
         return state(self.data, self.i) if state else None
 
 
-def compute(data):
+def compute(input, n, v):
+    data = input.copy()
+    data[1] = n
+    data[2] = v
     curr = ExecState(data, 0)
     while curr:
         curr.do()
@@ -47,10 +50,19 @@ def compute(data):
     return data
 
 
+def find(search):
+    for noun in range(99):
+        for verb in range(99):
+            data = compute(input, noun, verb)
+            if data[0] == search:
+                return noun, verb
+
+
 if __name__ == "__main__":
-    data = [int(s) for s in inputreader.readlines("day2.txt")[0].split(",")]
+    input = [int(s) for s in inputreader.readlines("day2.txt")[0].split(",")]
     # Part 1
-    data[1] = 12
-    data[2] = 2
-    data = compute(data)
-    print(data[0])
+    print(compute(input, 12, 2)[0])
+
+    # Part 2
+    n, v = find(19690720)
+    print(100 * n + v)
