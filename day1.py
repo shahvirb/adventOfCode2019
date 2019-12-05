@@ -27,17 +27,26 @@ def calc_fuel_with_child_fuel(m):
     return 0 if fuel < 0 else fuel + calc_fuel_with_child_fuel(fuel)
 
 
+def process_input(input):
+    masses = [int(i) for i in [line.strip() for line in input.splitlines()]]
+    return masses
+
+
+def part1(input):
+    return calc_fuel_sum(process_input(input))
+
+
+def part2(input):
+    fuels = [calc_fuel_with_child_fuel(m) for m in process_input(input)]
+    return sum(fuels)
+
+
 if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
 
-    input = inputreader.readlines("day1.txt")
+    input = inputreader.read("day1.txt")
 
-    # Part 1
-    masses = [int(i) for i in input]
-    print(calc_fuel_sum(masses))
-
-    # Part 2
-    fuels = [calc_fuel_with_child_fuel(m) for m in masses]
-    print(sum(fuels))
+    print(part1(input))
+    print(part2(input))

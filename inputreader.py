@@ -4,7 +4,7 @@ import pathlib
 BASE_DIR = r"inputs"
 
 
-def readlines(input=None):
+def read(input=None):
     if not input:
         import inspect
 
@@ -12,10 +12,9 @@ def readlines(input=None):
         caller_path = pathlib.Path(caller_filename)
         input = caller_path.stem + ".txt"
 
-    lines = readfile(os.path.join(BASE_DIR, input))
-    return [l.strip() for l in lines]
+    return readfile(os.path.join(BASE_DIR, input))
 
 
 def readfile(path):
     with open(path, "r") as file:
-        return file.readlines()
+        return file.read()

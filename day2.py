@@ -50,7 +50,7 @@ def compute(input, n, v):
     return data
 
 
-def find(search):
+def find(input, search):
     for noun in range(99):
         for verb in range(99):
             data = compute(input, noun, verb)
@@ -58,11 +58,21 @@ def find(search):
                 return noun, verb
 
 
-if __name__ == "__main__":
-    input = [int(s) for s in inputreader.readlines("day2.txt")[0].split(",")]
-    # Part 1
-    print(compute(input, 12, 2)[0])
+def process_input(input):
+    return [int(s) for s in input.split(",")]
 
-    # Part 2
-    n, v = find(19690720)
-    print(100 * n + v)
+
+def part1(input):
+    return compute(process_input(input), 12, 2)[0]
+
+
+def part2(input):
+    n, v = find(process_input(input), 19690720)
+    return 100 * n + v
+
+
+if __name__ == "__main__":
+    input = inputreader.read("day2.txt")
+
+    print(part1(input))
+    print(part2(input))
