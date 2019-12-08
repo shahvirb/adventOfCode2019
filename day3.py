@@ -121,7 +121,8 @@ def length(p1, p2):
     >>> length(Point(-1,-1), Point(-1,1))
     2
     """
-    return int(math.sqrt((p2.x-p1.x)**2 + (p2.y - p1.y) ** 2))
+    return int(math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2))
+
 
 def signal_delay(wire, crossing):
     """
