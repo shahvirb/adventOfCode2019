@@ -4,20 +4,19 @@ import typing
 class State:
     I_STEP = 1
 
-    def __init__(self, data: typing.List, i: int = 0, read_modes=None):
+    def __init__(self, data: typing.List, i: int = 0, read_modes=None, inputs=None):
         self.data = data
         self.i = i
         assert i <= len(data)
-        if read_modes:
-            self.read_modes = read_modes
+        self.read_modes = read_modes
+        self.inputs = inputs
 
     def do(self):
         pass
 
     def next_state(self):
         assert self.i + self.I_STEP <= len(self.data)
-        # TODO this should be the step length of the instruction
-        return ExecState(self.data, self.i + self.I_STEP)
+        return ExecState(self.data, self.i + self.I_STEP, inputs=self.inputs)
 
 
 def read_mem(mem, i, mode):
@@ -54,7 +53,15 @@ class MultState(State):
         self.data[self.data[self.i + 3]] = inputs[0] * inputs[1]
 
 
-COMMAND_MAP = {1: AddState, 2: MultState, 99: None}
+class InputState(State):
+    I_STEP = 2
+
+    def do(self):
+        assert self.inputs
+        self.data[self.data[self.i + 1]] = self.inputs.pop(0)
+
+
+COMMAND_MAP = {1: AddState, 2: MultState, 3: InputState, 99: None}
 
 
 def parse_code(code):
@@ -63,11 +70,12 @@ def parse_code(code):
     (2, (0, 1))
     >>> parse_code(11003)
     (3, (0, 1, 1))
-    >>> parse_code(99)
-    (99, ())
+    >>> parse_code(3)
+    (3, ())
     """
+    if code in (3, 4, 99):
+        return code, ()
     cstr = str(code)
-    assert len(cstr) >= 2
     return int(cstr[-2:]), tuple(int(c) for c in reversed(cstr[:-2]))
 
 
@@ -75,18 +83,22 @@ class ExecState(State):
     def next_state(self):
         cmd, modes = parse_code(self.data[self.i])
         state = COMMAND_MAP[cmd]
-        return state(self.data, self.i, modes) if state else None
+        return state(self.data, self.i, modes, self.inputs) if state else None
 
 
-def compute(input):
+def compute(mem, inputs=None):
     """
     >>> compute([1001,0,0,3,99])
     [1001, 0, 0, 1001, 99]
     >>> compute([1002,0,3,3,99])
     [1002, 0, 3, 3006, 99]
+    >>> compute([3, 1, 99], [-5])
+    [3, -5, 99]
+    >>> compute([3, 1, 3, 2, 99], [-5, -6])
+    [3, -5, -6, 2, 99]
     """
-    data = input.copy()
-    curr = ExecState(data, 0)
+    data = mem.copy()
+    curr = ExecState(data, 0, inputs=inputs)
     while curr:
         curr.do()
         curr = curr.next_state()
