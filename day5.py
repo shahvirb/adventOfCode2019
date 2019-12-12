@@ -9,6 +9,13 @@ def part1(input):
     return outs
 
 
+def part2(input):
+    mem = day2.process_input(input)
+    data, outs = intcode.compute(mem, [5])
+    return outs
+
+
 if __name__ == "__main__":
     input = inputreader.read("day5.txt")
     print(part1(input))
+    print(part2(input))

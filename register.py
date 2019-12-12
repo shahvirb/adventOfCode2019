@@ -15,4 +15,5 @@ REGISTRATION = [
     ("2019.4.1", day4.part1_brute),
     ("2019.4.2", day4.part2),
     ("2019.5.1", day5.part1),
+    ("2019.5.2", day5.part2),
 ]
