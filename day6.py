@@ -34,7 +34,8 @@ def make_nodes(input):
 
 
 def distance(node, primary=None):
-    if node.orbiting is None:
+    # Assumption: primary is always upstream of node
+    if node is primary:
         return 0
     return 1 + distance(node.orbiting, primary)
 
@@ -51,9 +52,42 @@ def count_orbits(nodes, sun_id=None):
     return d, i
 
 
+def common_orbiting(nodes):
+    visited = set()
+    q = [n.orbiting for n in nodes]
+    distance = 0
+    while q:
+        current = q.pop(0)
+        distance += 1
+        if current.id in visited:
+            return current, distance
+        visited.add(current.id)
+        if current.orbiting:
+            q.append(current.orbiting)
+
+    return None
+
+
 def part1(input):
     d, i = count_orbits(make_nodes(input), "COM")
     return d + i
+
+
+def part2(input):
+    nodes = make_nodes(input)
+    a = nodes["YOU"].orbiting
+    b = nodes["SAN"].orbiting
+    common, wrong = common_orbiting([a, b])
+    return distance(a, common) + distance(b, common)
+
+
+def gen_dot_text(nodes, path=None):
+    file = open(path, "w") if path else None
+    for id, n in nodes.items():
+        if n.orbiting:
+            print(f'"{n.id}" -> "{n.orbiting.id}";', file=file)
+    if file:
+        file.close()
 
 
 if __name__ == "__main__":
@@ -63,5 +97,9 @@ if __name__ == "__main__":
     import inputreader
 
     input = inputreader.read("day6.txt")
-    # print(part1("COM)A\nA)B"))
     print(part1(input))
+
+    # nodes = make_nodes("COM)A\nA)B\nA)D")
+    # print(common_orbiting([nodes['B'], nodes['D']]))
+
+    print(part2(input))
