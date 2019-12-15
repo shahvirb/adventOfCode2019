@@ -153,7 +153,22 @@ class ExecState(State):
         )
 
 
-def compute(mem, inputs=None, debug_prints=False):
+class Computer:
+    def __init__(self, mem, inputs=None, run=True):
+        self.mem = mem.copy()
+        self.inputs = inputs
+        self.outputs = []
+        if run:
+            self.run()
+
+    def run(self):
+        curr = ExecState(self.mem, 0, inputs=self.inputs, outputs=self.outputs)
+        while curr:
+            curr.do()
+            curr = curr.next_state()
+
+
+def compute(mem, inputs=None):
     """
     >>> compute([1001,0,0,3,99])
     ([1001, 0, 0, 1001, 99], [])
@@ -182,15 +197,8 @@ def compute(mem, inputs=None, debug_prints=False):
     >>> compute([3,3,1105,-1,9,1101,0,0,12,4,12,99,1], [0])
     ([3, 3, 1105, 0, 9, 1101, 0, 0, 12, 4, 12, 99, 0], [0])
     """
-    data = mem.copy()
-    outputs = []
-    curr = ExecState(data, 0, inputs=inputs, outputs=outputs)
-    while curr:
-        curr.do()
-        if debug_prints:
-            print(curr)
-        curr = curr.next_state()
-    return data, outputs
+    c = Computer(mem, inputs)
+    return c.mem, c.outputs
 
 
 if __name__ == "__main__":
