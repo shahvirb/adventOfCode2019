@@ -58,16 +58,12 @@ def find(input, search):
                 return noun, verb
 
 
-def process_input(input):
-    return [int(s) for s in input.split(",")]
-
-
 def part1(input):
-    return compute(process_input(input), 12, 2)[0]
+    return compute(inputreader.to_intcode(input), 12, 2)[0]
 
 
 def part2(input):
-    n, v = find(process_input(input), 19690720)
+    n, v = find(inputreader.to_intcode(input), 19690720)
     return 100 * n + v
 
 

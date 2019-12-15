@@ -4,13 +4,13 @@ import day2
 
 
 def part1(input):
-    mem = day2.process_input(input)
+    mem = inputreader.to_intcode(input)
     data, outs = intcode.compute(mem, [1])
     return outs
 
 
 def part2(input):
-    mem = day2.process_input(input)
+    mem = inputreader.to_intcode(input)
     data, outs = intcode.compute(mem, [5])
     return outs
 

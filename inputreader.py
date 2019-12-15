@@ -18,3 +18,7 @@ def read(input=None):
 def readfile(path):
     with open(path, "r") as file:
         return file.read()
+
+
+def to_intcode(input):
+    return [int(s) for s in input.split(",")]
