@@ -55,12 +55,10 @@ def count_orbits(nodes, sun_id=None):
 def common_orbiting(nodes):
     visited = set()
     q = [n.orbiting for n in nodes]
-    distance = 0
     while q:
         current = q.pop(0)
-        distance += 1
         if current.id in visited:
-            return current, distance
+            return current
         visited.add(current.id)
         if current.orbiting:
             q.append(current.orbiting)
@@ -77,7 +75,7 @@ def part2(input):
     nodes = make_nodes(input)
     a = nodes["YOU"].orbiting
     b = nodes["SAN"].orbiting
-    common, wrong = common_orbiting([a, b])
+    common = common_orbiting([a, b])
     return distance(a, common) + distance(b, common)
 
 
