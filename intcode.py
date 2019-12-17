@@ -1,3 +1,4 @@
+import enum
 import typing
 import pytest
 
@@ -5,6 +6,36 @@ import pytest
 class IntCodeNoInputError(Exception):
     def __str__(self):
         return "No input available"
+
+
+class ParamMode(enum.Enum):
+    POSITION = 0
+    DIRECT = 1
+    RELATIVE = 2
+
+
+def read_mem(mem, i, mode, rb=0):
+    mode = ParamMode(mode)
+    if mode == ParamMode.DIRECT:
+        return mem[i]
+    if mode == ParamMode.POSITION:
+        return mem[mem[i]]
+    if mode == ParamMode.RELATIVE:
+        return mem[mem[i] + rb]
+
+
+def test_read_mem():
+    assert read_mem([1, 2, 3], 0, 0) == 2
+    assert read_mem([1, 2, 3], 2, 1) == 3
+    assert read_mem([1, 2, 3], 2, 2, rb=-1) == 3
+    assert read_mem([1, 2, 3, 4, 5], 1, 2, rb=2) == 5
+
+
+def read_params(data, i, modes, count=2):
+    return [
+        read_mem(data, i + 1 + n, modes[n] if n < len(modes) else 0,)
+        for n in range(0, count)
+    ]
 
 
 class State:
@@ -31,23 +62,6 @@ class State:
 
     def __repr__(self):
         return ",".join([str(d) for d in self.data[self.i : self.i + self.I_STEP]])
-
-
-def read_mem(mem, i, mode):
-    assert mode == 0 or mode == 1
-    return mem[i if mode == 1 else mem[i]]
-
-
-def test_read_mem():
-    assert read_mem([1, 2, 3], 0, 0) == 2
-    assert read_mem([1, 2, 3], 2, 1) == 3
-
-
-def read_params(data, i, modes, count=2):
-    return [
-        read_mem(data, i + 1 + n, modes[n] if n < len(modes) else 0,)
-        for n in range(0, count)
-    ]
 
 
 class AddState(State):
