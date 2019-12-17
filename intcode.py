@@ -170,6 +170,16 @@ class CmpEqualsState(State):
         )
 
 
+class AdjustRelBaseState(State):
+    I_STEP = 2
+
+    def do(self):
+        addresses = param_addresses(
+            self.computer.data, self.computer.i, self.read_modes, self.I_STEP - 1
+        )
+        self.computer.rbase += self.computer.data[addresses[0]]
+
+
 def parse_code(code):
     cstr = str(code)
     return int(cstr[-2:]), tuple(ParamMode(int(c)) for c in reversed(cstr[:-2]))
@@ -196,6 +206,7 @@ class ExecState(State):
             6: JumpFalseState,
             7: CmpLessState,
             8: CmpEqualsState,
+            9: AdjustRelBaseState,
             99: None,
         }
         cmd, modes = parse_code(self.computer.data[self.computer.i])
@@ -252,6 +263,13 @@ def test_compute():
         [3, 3, 1105, 0, 9, 1101, 0, 0, 12, 4, 12, 99, 0],
         [0],
     )
+
+
+def test_relative_base_adjustment():
+    c = Computer([109, 19, 99])
+    assert c.rbase == 19
+    c = Computer([109, 1, 109, -5, 99])
+    assert c.rbase == -4
 
 
 if __name__ == "__main__":
