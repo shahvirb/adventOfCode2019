@@ -1,4 +1,10 @@
 import typing
+import pytest
+
+
+class IntCodeNoInputError(Exception):
+    def __str__(self):
+        return "No input available"
 
 
 class State:
@@ -36,6 +42,7 @@ def test_read_mem():
     assert read_mem([1, 2, 3], 0, 0) == 2
     assert read_mem([1, 2, 3], 2, 1) == 3
 
+
 def read_params(data, i, modes, count=2):
     return [
         read_mem(data, i + 1 + n, modes[n] if n < len(modes) else 0,)
@@ -63,7 +70,8 @@ class InputState(State):
     I_STEP = 2
 
     def do(self):
-        assert self.inputs
+        if not self.inputs:
+            raise IntCodeNoInputError()
         self.data[self.data[self.i + 1]] = self.inputs.pop(0)
 
 
@@ -153,14 +161,24 @@ class Computer:
         self.mem = mem.copy()
         self.inputs = inputs
         self.outputs = []
+        self.current_state = ExecState(
+            self.mem, 0, inputs=self.inputs, outputs=self.outputs
+        )
         if run:
             self.run()
 
-    def run(self):
-        curr = ExecState(self.mem, 0, inputs=self.inputs, outputs=self.outputs)
-        while curr:
-            curr.do()
-            curr = curr.next_state()
+    def run(self, partial=False):
+        # return value of False means that we have not reached the halt (99) state yet
+        while self.current_state:
+            try:
+                self.current_state.do()
+            except IntCodeNoInputError as e:
+                if not partial:
+                    raise e
+                else:
+                    return False
+            self.current_state = self.current_state.next_state()
+        return True
 
 
 def compute(mem, inputs=None):
@@ -169,25 +187,25 @@ def compute(mem, inputs=None):
 
 
 def test_compute():
-    def verify(mem, inputs=None, ret=None):
-        assert compute(mem, inputs) == ret
-
-    verify([1001, 0, 0, 3, 99], ret=([1001, 0, 0, 1001, 99], []))
-    verify([1002, 0, 3, 3, 99], ret=([1002, 0, 3, 3006, 99], []))
-    verify([3, 1, 99], [-5], ret=([3, -5, 99], []))
-    verify([3, 1, 3, 2, 99], [-5, -6], ret=([3, -5, -6, 2, 99], []))
-    verify([4, 0, 99], ret=([4, 0, 99], [4]))
-    verify([104, 86, 99], ret=([104, 86, 99], [86]))
-    verify([1105, 0, 300, 99], ret=([1105, 0, 300, 99], []))
-    verify([1105, 13, 6, -1, -1, -1, 99], ret=([1105, 13, 6, -1, -1, -1, 99], []))
-    verify([1106, 13, 300, 99], ret=([1106, 13, 300, 99], []))
-    verify([1108, 1, 1, 5, 99, -1], ret=([1108, 1, 1, 5, 99, 1], []))
-    verify([108, -1, 5, 6, 99, -1, -1], ret=([108, -1, 5, 6, 99, -1, 1], []))
-    verify([1107, 1, 2, 5, 99, -1], ret=([1107, 1, 2, 5, 99, 1], []))
-    verify([3, 3, 1105, -1, 9, 1101, 0, 0, 12, 4, 12, 99, 1], [0],
-           ret=([3, 3, 1105, 0, 9, 1101, 0, 0, 12, 4, 12, 99, 0], [0]))
+    assert compute([1001, 0, 0, 3, 99]) == ([1001, 0, 0, 1001, 99], [])
+    assert compute([1002, 0, 3, 3, 99]) == ([1002, 0, 3, 3006, 99], [])
+    assert compute([3, 1, 99], [-5]) == ([3, -5, 99], [])
+    assert compute([3, 1, 3, 2, 99], [-5, -6]) == ([3, -5, -6, 2, 99], [])
+    with pytest.raises(IntCodeNoInputError):
+        compute([3, 1, 99], [])
+    assert compute([4, 0, 99]) == ([4, 0, 99], [4])
+    assert compute([104, 86, 99]) == ([104, 86, 99], [86])
+    assert compute([1105, 0, 300, 99]) == ([1105, 0, 300, 99], [])
+    assert compute([1105, 13, 6, -1, -1, -1, 99]) == ([1105, 13, 6, -1, -1, -1, 99], [])
+    assert compute([1106, 13, 300, 99]) == ([1106, 13, 300, 99], [])
+    assert compute([1108, 1, 1, 5, 99, -1]) == ([1108, 1, 1, 5, 99, 1], [])
+    assert compute([108, -1, 5, 6, 99, -1, -1]) == ([108, -1, 5, 6, 99, -1, 1], [])
+    assert compute([1107, 1, 2, 5, 99, -1]) == ([1107, 1, 2, 5, 99, 1], [])
+    assert compute([3, 3, 1105, -1, 9, 1101, 0, 0, 12, 4, 12, 99, 1], [0]) == (
+        [3, 3, 1105, 0, 9, 1101, 0, 0, 12, 4, 12, 99, 0],
+        [0],
+    )
 
 
 if __name__ == "__main__":
     pass
-
