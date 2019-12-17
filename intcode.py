@@ -23,22 +23,27 @@ def address(mem, i, mode, rb=0):
         return mem[i] + rb
 
 
-def read_mem(mem, i, mode, rb=0):
-    return mem[address(mem, i, mode, rb)]
+def test_address():
+    def read_mem(mem, i, mode, rb=0):
+        return mem[address(mem, i, mode, rb)]
 
-
-def test_read_mem():
     assert read_mem([1, 2, 3], 0, ParamMode.POSITION) == 2
     assert read_mem([1, 2, 3], 2, ParamMode.DIRECT) == 3
     assert read_mem([1, 2, 3], 2, ParamMode.RELATIVE, rb=-1) == 3
     assert read_mem([1, 2, 3, 4, 5], 1, ParamMode.RELATIVE, rb=2) == 5
 
 
-def read_params(data, i, modes, count=2):
+def param_addresses(data, i, modes, count):
     return [
-        read_mem(data, i + 1 + n, modes[n] if n < len(modes) else ParamMode.POSITION)
+        address(data, i + 1 + n, modes[n] if n < len(modes) else ParamMode.POSITION)
         for n in range(0, count)
     ]
+
+
+def test_param_addresses():
+    assert param_addresses(
+        [1001, 0, -13, 3, 99], 0, (ParamMode.POSITION, ParamMode.DIRECT), 3
+    ) == [0, 2, 3]
 
 
 class State:
@@ -58,23 +63,38 @@ class State:
         return ExecState(self.computer)
 
     def __repr__(self):
-        return ",".join([str(d) for d in self.computer.data[self.computer.i : self.computer.i + self.I_STEP]])
+        return ",".join(
+            [
+                str(d)
+                for d in self.computer.data[
+                    self.computer.i : self.computer.i + self.I_STEP
+                ]
+            ]
+        )
 
 
 class AddState(State):
     I_STEP = 4
 
     def do(self):
-        params = read_params(self.computer.data, self.computer.i, self.read_modes)
-        self.computer.data[self.computer.data[self.computer.i + 3]] = sum(params)
+        addresses = param_addresses(
+            self.computer.data, self.computer.i, self.read_modes, self.I_STEP - 1
+        )
+        self.computer.data[addresses[2]] = (
+            self.computer.data[addresses[0]] + self.computer.data[addresses[1]]
+        )
 
 
 class MultState(State):
     I_STEP = 4
 
     def do(self):
-        params = read_params(self.computer.data, self.computer.i, self.read_modes)
-        self.computer.data[self.computer.data[self.computer.i + 3]] = params[0] * params[1]
+        addresses = param_addresses(
+            self.computer.data, self.computer.i, self.read_modes, self.I_STEP - 1
+        )
+        self.computer.data[addresses[2]] = (
+            self.computer.data[addresses[0]] * self.computer.data[addresses[1]]
+        )
 
 
 class InputState(State):
@@ -83,9 +103,10 @@ class InputState(State):
     def do(self):
         if not self.computer.inputs:
             raise IntCodeNoInputError()
-        #TODO shouldn't this support parameter modes?
-        assert len(self.read_modes) == 0
-        self.computer.data[self.computer.data[self.computer.i + 1]] = self.computer.inputs.pop(0)
+        addresses = param_addresses(
+            self.computer.data, self.computer.i, self.read_modes, self.I_STEP - 1
+        )
+        self.computer.data[addresses[0]] = self.computer.inputs.pop(0)
 
 
 class OutputState(State):
@@ -93,18 +114,22 @@ class OutputState(State):
 
     def do(self):
         assert self.computer.outputs is not None
-        params = read_params(self.computer.data, self.computer.i, self.read_modes, 1)
-        self.computer.outputs.append(params[0])
+        addresses = param_addresses(
+            self.computer.data, self.computer.i, self.read_modes, self.I_STEP - 1
+        )
+        self.computer.outputs.append(self.computer.data[addresses[0]])
 
 
 class JumpTrueState(State):
     I_STEP = 3
 
     def do(self):
-        params = read_params(self.computer.data, self.computer.i, self.read_modes)
-        if params[0] != 0:
+        addresses = param_addresses(
+            self.computer.data, self.computer.i, self.read_modes, self.I_STEP - 1
+        )
+        if self.computer.data[addresses[0]] != 0:
             self.computer.i = (
-                params[1] - self.I_STEP
+                self.computer.data[addresses[1]] - self.I_STEP
             )  # subtract I_STEP because super class will add I_STEP
 
 
@@ -112,10 +137,12 @@ class JumpFalseState(State):
     I_STEP = 3
 
     def do(self):
-        params = read_params(self.computer.data, self.computer.i, self.read_modes)
-        if params[0] == 0:
+        addresses = param_addresses(
+            self.computer.data, self.computer.i, self.read_modes, self.I_STEP - 1
+        )
+        if self.computer.data[addresses[0]] == 0:
             self.computer.i = (
-                params[1] - self.I_STEP
+                self.computer.data[addresses[1]] - self.I_STEP
             )  # subtract I_STEP because super class will add I_STEP
 
 
@@ -123,16 +150,24 @@ class CmpLessState(State):
     I_STEP = 4
 
     def do(self):
-        params = read_params(self.computer.data, self.computer.i, self.read_modes, 2)
-        self.computer.data[self.computer.data[self.computer.i + 3]] = 1 if params[0] < params[1] else 0
+        addresses = param_addresses(
+            self.computer.data, self.computer.i, self.read_modes, self.I_STEP - 1
+        )
+        self.computer.data[addresses[2]] = (
+            1 if self.computer.data[addresses[0]] < self.computer.data[addresses[1]] else 0
+        )
 
 
 class CmpEqualsState(State):
     I_STEP = 4
 
     def do(self):
-        params = read_params(self.computer.data, self.computer.i, self.read_modes, 2)
-        self.computer.data[self.computer.data[self.computer.i + 3]] = 1 if params[0] == params[1] else 0
+        addresses = param_addresses(
+            self.computer.data, self.computer.i, self.read_modes, self.I_STEP - 1
+        )
+        self.computer.data[addresses[2]] = (
+            1 if self.computer.data[addresses[0]] == self.computer.data[addresses[1]] else 0
+        )
 
 
 def parse_code(code):
@@ -144,7 +179,10 @@ def test_parse_code():
     assert parse_code(2) == (2, ())
     assert parse_code(3) == (3, ())
     assert parse_code(1002) == (2, (ParamMode.POSITION, ParamMode.DIRECT))
-    assert parse_code(11003) == (3, (ParamMode.POSITION, ParamMode.DIRECT, ParamMode.DIRECT))
+    assert parse_code(11003) == (
+        3,
+        (ParamMode.POSITION, ParamMode.DIRECT, ParamMode.DIRECT),
+    )
 
 
 class ExecState(State):
@@ -162,11 +200,7 @@ class ExecState(State):
         }
         cmd, modes = parse_code(self.computer.data[self.computer.i])
         state = COMMAND_MAP[cmd]
-        return (
-            state(self.computer, read_modes=modes)
-            if state
-            else None
-        )
+        return state(self.computer, read_modes=modes) if state else None
 
 
 class Computer:
