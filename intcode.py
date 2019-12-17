@@ -28,15 +28,13 @@ class State:
 
 
 def read_mem(mem, i, mode):
-    """
-    >>> read_mem([1,2,3], 0, 0)
-    2
-    >>> read_mem([1,2,3], 2, 1)
-    3
-    """
     assert mode == 0 or mode == 1
     return mem[i if mode == 1 else mem[i]]
 
+
+def test_read_mem():
+    assert read_mem([1, 2, 3], 0, 0) == 2
+    assert read_mem([1, 2, 3], 2, 1) == 3
 
 def read_params(data, i, modes, count=2):
     return [
@@ -117,18 +115,15 @@ class CmpEqualsState(State):
 
 
 def parse_code(code):
-    """
-    >>> parse_code(2)
-    (2, ())
-    >>> parse_code(3)
-    (3, ())
-    >>> parse_code(1002)
-    (2, (0, 1))
-    >>> parse_code(11003)
-    (3, (0, 1, 1))
-    """
     cstr = str(code)
     return int(cstr[-2:]), tuple(int(c) for c in reversed(cstr[:-2]))
+
+
+def test_parse_code():
+    assert parse_code(2) == (2, ())
+    assert parse_code(3) == (3, ())
+    assert parse_code(1002) == (2, (0, 1))
+    assert parse_code(11003) == (3, (0, 1, 1))
 
 
 class ExecState(State):
@@ -169,39 +164,30 @@ class Computer:
 
 
 def compute(mem, inputs=None):
-    """
-    >>> compute([1001,0,0,3,99])
-    ([1001, 0, 0, 1001, 99], [])
-    >>> compute([1002,0,3,3,99])
-    ([1002, 0, 3, 3006, 99], [])
-    >>> compute([3, 1, 99], [-5])
-    ([3, -5, 99], [])
-    >>> compute([3, 1, 3, 2, 99], [-5, -6])
-    ([3, -5, -6, 2, 99], [])
-    >>> compute([4,0,99])
-    ([4, 0, 99], [4])
-    >>> compute([104,86,99])
-    ([104, 86, 99], [86])
-    >>> compute([1105, 0, 300, 99])
-    ([1105, 0, 300, 99], [])
-    >>> compute([1105, 13, 6, -1, -1, -1, 99])
-    ([1105, 13, 6, -1, -1, -1, 99], [])
-    >>> compute([1106, 13, 300, 99])
-    ([1106, 13, 300, 99], [])
-    >>> compute([1108,1,1,5,99,-1])
-    ([1108, 1, 1, 5, 99, 1], [])
-    >>> compute([108,-1,5,6,99,-1, -1])
-    ([108, -1, 5, 6, 99, -1, 1], [])
-    >>> compute([1107,1,2,5,99,-1])
-    ([1107, 1, 2, 5, 99, 1], [])
-    >>> compute([3,3,1105,-1,9,1101,0,0,12,4,12,99,1], [0])
-    ([3, 3, 1105, 0, 9, 1101, 0, 0, 12, 4, 12, 99, 0], [0])
-    """
     c = Computer(mem, inputs)
     return c.mem, c.outputs
 
 
-if __name__ == "__main__":
-    import doctest
+def test_compute():
+    def verify(mem, inputs=None, ret=None):
+        assert compute(mem, inputs) == ret
 
-    doctest.testmod()
+    verify([1001, 0, 0, 3, 99], ret=([1001, 0, 0, 1001, 99], []))
+    verify([1002, 0, 3, 3, 99], ret=([1002, 0, 3, 3006, 99], []))
+    verify([3, 1, 99], [-5], ret=([3, -5, 99], []))
+    verify([3, 1, 3, 2, 99], [-5, -6], ret=([3, -5, -6, 2, 99], []))
+    verify([4, 0, 99], ret=([4, 0, 99], [4]))
+    verify([104, 86, 99], ret=([104, 86, 99], [86]))
+    verify([1105, 0, 300, 99], ret=([1105, 0, 300, 99], []))
+    verify([1105, 13, 6, -1, -1, -1, 99], ret=([1105, 13, 6, -1, -1, -1, 99], []))
+    verify([1106, 13, 300, 99], ret=([1106, 13, 300, 99], []))
+    verify([1108, 1, 1, 5, 99, -1], ret=([1108, 1, 1, 5, 99, 1], []))
+    verify([108, -1, 5, 6, 99, -1, -1], ret=([108, -1, 5, 6, 99, -1, 1], []))
+    verify([1107, 1, 2, 5, 99, -1], ret=([1107, 1, 2, 5, 99, 1], []))
+    verify([3, 3, 1105, -1, 9, 1101, 0, 0, 12, 4, 12, 99, 1], [0],
+           ret=([3, 3, 1105, 0, 9, 1101, 0, 0, 12, 4, 12, 99, 0], [0]))
+
+
+if __name__ == "__main__":
+    pass
+
