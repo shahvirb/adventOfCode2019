@@ -86,6 +86,8 @@ class InputState(State):
     def do(self):
         if not self.inputs:
             raise IntCodeNoInputError()
+        #TODO shouldn't this support parameter modes?
+        assert len(self.read_modes) == 0
         self.data[self.data[self.i + 1]] = self.inputs.pop(0)
 
 
@@ -138,14 +140,14 @@ class CmpEqualsState(State):
 
 def parse_code(code):
     cstr = str(code)
-    return int(cstr[-2:]), tuple(int(c) for c in reversed(cstr[:-2]))
+    return int(cstr[-2:]), tuple(ParamMode(int(c)) for c in reversed(cstr[:-2]))
 
 
 def test_parse_code():
     assert parse_code(2) == (2, ())
     assert parse_code(3) == (3, ())
-    assert parse_code(1002) == (2, (0, 1))
-    assert parse_code(11003) == (3, (0, 1, 1))
+    assert parse_code(1002) == (2, (ParamMode.POSITION, ParamMode.DIRECT))
+    assert parse_code(11003) == (3, (ParamMode.POSITION, ParamMode.DIRECT, ParamMode.DIRECT))
 
 
 class ExecState(State):
