@@ -2,6 +2,7 @@ import enum
 import pytest
 import extended_list
 
+
 class IntCodeNoInputError(Exception):
     def __str__(self):
         return "No input available"
@@ -77,7 +78,11 @@ class AddState(State):
 
     def do(self):
         addresses = param_addresses(
-            self.computer.data, self.computer.i, self.computer.rbase, self.read_modes, self.I_STEP - 1
+            self.computer.data,
+            self.computer.i,
+            self.computer.rbase,
+            self.read_modes,
+            self.I_STEP - 1,
         )
         self.computer.data[addresses[2]] = (
             self.computer.data[addresses[0]] + self.computer.data[addresses[1]]
@@ -89,7 +94,11 @@ class MultState(State):
 
     def do(self):
         addresses = param_addresses(
-            self.computer.data, self.computer.i, self.computer.rbase, self.read_modes, self.I_STEP - 1
+            self.computer.data,
+            self.computer.i,
+            self.computer.rbase,
+            self.read_modes,
+            self.I_STEP - 1,
         )
         self.computer.data[addresses[2]] = (
             self.computer.data[addresses[0]] * self.computer.data[addresses[1]]
@@ -103,7 +112,11 @@ class InputState(State):
         if not self.computer.inputs:
             raise IntCodeNoInputError()
         addresses = param_addresses(
-            self.computer.data, self.computer.i, self.computer.rbase, self.read_modes, self.I_STEP - 1
+            self.computer.data,
+            self.computer.i,
+            self.computer.rbase,
+            self.read_modes,
+            self.I_STEP - 1,
         )
         self.computer.data[addresses[0]] = self.computer.inputs.pop(0)
 
@@ -114,7 +127,11 @@ class OutputState(State):
     def do(self):
         assert self.computer.outputs is not None
         addresses = param_addresses(
-            self.computer.data, self.computer.i, self.computer.rbase, self.read_modes, self.I_STEP - 1
+            self.computer.data,
+            self.computer.i,
+            self.computer.rbase,
+            self.read_modes,
+            self.I_STEP - 1,
         )
         self.computer.outputs.append(self.computer.data[addresses[0]])
 
@@ -124,7 +141,11 @@ class JumpTrueState(State):
 
     def do(self):
         addresses = param_addresses(
-            self.computer.data, self.computer.i, self.computer.rbase, self.read_modes, self.I_STEP - 1
+            self.computer.data,
+            self.computer.i,
+            self.computer.rbase,
+            self.read_modes,
+            self.I_STEP - 1,
         )
         if self.computer.data[addresses[0]] != 0:
             self.computer.i = (
@@ -137,7 +158,11 @@ class JumpFalseState(State):
 
     def do(self):
         addresses = param_addresses(
-            self.computer.data, self.computer.i, self.computer.rbase, self.read_modes, self.I_STEP - 1
+            self.computer.data,
+            self.computer.i,
+            self.computer.rbase,
+            self.read_modes,
+            self.I_STEP - 1,
         )
         if self.computer.data[addresses[0]] == 0:
             self.computer.i = (
@@ -150,10 +175,16 @@ class CmpLessState(State):
 
     def do(self):
         addresses = param_addresses(
-            self.computer.data, self.computer.i, self.computer.rbase, self.read_modes, self.I_STEP - 1
+            self.computer.data,
+            self.computer.i,
+            self.computer.rbase,
+            self.read_modes,
+            self.I_STEP - 1,
         )
         self.computer.data[addresses[2]] = (
-            1 if self.computer.data[addresses[0]] < self.computer.data[addresses[1]] else 0
+            1
+            if self.computer.data[addresses[0]] < self.computer.data[addresses[1]]
+            else 0
         )
 
 
@@ -162,10 +193,16 @@ class CmpEqualsState(State):
 
     def do(self):
         addresses = param_addresses(
-            self.computer.data, self.computer.i, self.computer.rbase, self.read_modes, self.I_STEP - 1
+            self.computer.data,
+            self.computer.i,
+            self.computer.rbase,
+            self.read_modes,
+            self.I_STEP - 1,
         )
         self.computer.data[addresses[2]] = (
-            1 if self.computer.data[addresses[0]] == self.computer.data[addresses[1]] else 0
+            1
+            if self.computer.data[addresses[0]] == self.computer.data[addresses[1]]
+            else 0
         )
 
 
@@ -174,7 +211,11 @@ class AdjustRelBaseState(State):
 
     def do(self):
         addresses = param_addresses(
-            self.computer.data, self.computer.i, self.computer.rbase, self.read_modes, self.I_STEP - 1
+            self.computer.data,
+            self.computer.i,
+            self.computer.rbase,
+            self.read_modes,
+            self.I_STEP - 1,
         )
         self.computer.rbase += self.computer.data[addresses[0]]
 
@@ -262,9 +303,31 @@ def test_compute():
         [3, 3, 1105, 0, 9, 1101, 0, 0, 12, 4, 12, 99, 0],
         [0],
     )
-    d, o = compute([109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99])
-    assert o == [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
-    assert compute([104,1125899906842624,99]) == ([104,1125899906842624,99], [1125899906842624])
+    d, o = compute(
+        [109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99]
+    )
+    assert o == [
+        109,
+        1,
+        204,
+        -1,
+        1001,
+        100,
+        1,
+        100,
+        1008,
+        100,
+        16,
+        101,
+        1006,
+        101,
+        0,
+        99,
+    ]
+    assert compute([104, 1125899906842624, 99]) == (
+        [104, 1125899906842624, 99],
+        [1125899906842624],
+    )
 
 
 def test_relative_base_adjustment():
