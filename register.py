@@ -28,4 +28,5 @@ REGISTRATION = [
     ("2019.8.2", day8.part2),
     ("2019.8.2", day8.part2),
     ("2019.9.1", day9.part1),
+    ("2019.9.2", day9.part2),
 ]
