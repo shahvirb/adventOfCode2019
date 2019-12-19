@@ -12,7 +12,7 @@ def to_polar(cart, origin=None):
     y = origin.y if origin else 0
     dx = cart.x - x
     dy = cart.y - y
-    r = math.sqrt(dx**2 + dy**2)
+    r = math.sqrt(dx ** 2 + dy ** 2)
 
     try:
         t = math.degrees(math.atan(dy / float(dx)))
@@ -50,7 +50,9 @@ def test_to_polar():
 
 def to_cartesian(p, origin=None):
     def to_int(f):
-        return int(round(f, 10)) # 10 is arbitrary. Test empirically to see if it works.
+        return int(
+            round(f, 10)
+        )  # 10 is arbitrary. Test empirically to see if it works.
 
     x = p.r * math.cos(math.radians(p.theta)) + origin.x if origin else 0
     y = p.r * math.sin(math.radians(p.theta)) + origin.y if origin else 0
@@ -62,8 +64,8 @@ def make_objects(input):
     asteroids = []
     for y, line in enumerate(input.splitlines()):
         for x, ch in enumerate(line):
-            assert ch == '#' or ch == '.'
-            if ch == '#':
+            assert ch == "#" or ch == "."
+            if ch == "#":
                 asteroids.append(Cartesian(x, y))
     return asteroids
 
@@ -93,10 +95,9 @@ def part2(input, stop=200):
     asteroid_angles = angles(best, asteroids)
     # Sort the asteroids by r so that they're vaporized from closest outwards
     for a in asteroid_angles:
-        asteroid_angles[a] = sorted(asteroid_angles[a], key=operator.attrgetter('r'))
+        asteroid_angles[a] = sorted(asteroid_angles[a], key=operator.attrgetter("r"))
 
-
-    all_angles = sorted(asteroid_angles.keys(), reverse = False)
+    all_angles = sorted(asteroid_angles.keys(), reverse=False)
     start_i = all_angles.index(270.0)
     angle_it = itertools.islice(itertools.cycle(all_angles), start_i, None)
 
