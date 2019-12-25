@@ -9,6 +9,7 @@ import day8
 import day9
 import day10
 import day11
+import day12
 
 
 REGISTRATION = [
@@ -35,4 +36,6 @@ REGISTRATION = [
     ("2019.10.2", day10.part2),
     ("2019.11.1", day11.part1),
     ("2019.11.2", day11.part2),
+    ("2019.12.1", day12.part1),
+    #("2019.12.2", day12.part2),
 ]
